@@ -43,22 +43,22 @@ public class Game extends JPanel {
                 //Move main piece up
                 if ((e.getKeyCode() == KeyEvent.VK_UP)|| (e.getKeyCode() == KeyEvent.VK_W) ){
                     direction = MovementSystem.Direction.up;
-                    mMovementSystem.update(direction, mEntities);
+                    mControlSystem.update(direction, mEntities);
                 }
                 //Move main piece left
                 if ((e.getKeyCode() == KeyEvent.VK_LEFT) || (e.getKeyCode() == KeyEvent.VK_A)) {
                     direction = MovementSystem.Direction.left;
-                    mMovementSystem.update(direction, mEntities);
+                    mControlSystem.update(direction, mEntities);
                 }
                 //Move main piece down
                 if ((e.getKeyCode() == KeyEvent.VK_DOWN) || (e.getKeyCode() == KeyEvent.VK_S)){
                     direction = MovementSystem.Direction.down;
-                    mMovementSystem.update(direction, mEntities);
+                    mControlSystem.update(direction, mEntities);
                 }
                 //Move main piece right
                 if ((e.getKeyCode() == KeyEvent.VK_RIGHT) || (e.getKeyCode() == KeyEvent.VK_D)){
                     direction = MovementSystem.Direction.right;
-                    mMovementSystem.update(direction, mEntities);
+                    mControlSystem.update(direction, mEntities);
                 }
                 
         }});
@@ -78,11 +78,13 @@ public class Game extends JPanel {
     Vector<Entity> mEntities = new Vector<Entity>();
     RenderSystem mRenderSystem;
     MovementSystem mMovementSystem;
+    ControlSystem mControlSystem;
     int id = 0;
 
     public Game() {
         mMovementSystem = new MovementSystem();
         mRenderSystem = new RenderSystem();
+        mControlSystem = new ControlSystem();
         setupWindow();
         // Create a new vector of entities
         mEntities = new Vector<Entity>();
@@ -116,7 +118,7 @@ public class Game extends JPanel {
             // System.out.println(dt);
             last = now;
 
-            // mPhysicsSystem.update(mEntities, dt);
+            mMovementSystem.update(mEntities);
 
             repaint();
             // Toolkit.getDefaultToolkit().sync();
