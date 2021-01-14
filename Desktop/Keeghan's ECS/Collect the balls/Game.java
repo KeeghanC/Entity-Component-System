@@ -8,6 +8,7 @@ import java.awt.event.KeyEvent;
 import java.lang.System;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.Vector;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -16,9 +17,27 @@ import java.awt.event.KeyListener;
 import java.lang.*;
 import static java.lang.System.out;
 
+/*
+ TODO:
+
+Add edible component
+Check for collisions
+Allow for balls to increase in size when they collide
+
+
+
+
+
+*/
+
+
 public class Game extends JPanel {
     public static int WINDOW_WIDTH = 1920;
     public static int WINDOW_HEIGHT = 1080;
+    public static int UP = 0;
+    public static int DOWN = 1;
+    public static int LEFT = 2;
+    public static int RIGHT = 3;
         // Function to create the window and display it
     public void setupWindow() {
         JFrame frame = new JFrame();
@@ -31,7 +50,25 @@ public class Game extends JPanel {
         frame.addKeyListener(new KeyListener(){
             @Override
             public void keyReleased(KeyEvent e){
-                // System.out.println("Key released");
+                if ((e.getKeyCode() == KeyEvent.VK_UP) || (e.getKeyCode() == KeyEvent.VK_W) ){
+                    mKeysCurrentlyPressed[UP] = false;
+                    mControlSystem.update(mKeysCurrentlyPressed, mEntities);
+                }
+                //Move main piece left
+                if ((e.getKeyCode() == KeyEvent.VK_LEFT) || (e.getKeyCode() == KeyEvent.VK_A)) {
+                    mKeysCurrentlyPressed[LEFT] = false;
+                    mControlSystem.update(mKeysCurrentlyPressed, mEntities);
+                }
+                //Move main piece down
+                if ((e.getKeyCode() == KeyEvent.VK_DOWN) || (e.getKeyCode() == KeyEvent.VK_S)){
+                    mKeysCurrentlyPressed[DOWN] = false;
+                    mControlSystem.update(mKeysCurrentlyPressed, mEntities);
+                }
+                //Move main piece right
+                if ((e.getKeyCode() == KeyEvent.VK_RIGHT) || (e.getKeyCode() == KeyEvent.VK_D)){
+                    mKeysCurrentlyPressed[RIGHT] = false;
+                    mControlSystem.update(mKeysCurrentlyPressed, mEntities);
+                }
             }
             @Override
             public void keyTyped(KeyEvent e){
@@ -39,26 +76,25 @@ public class Game extends JPanel {
             }
             @Override
             public void keyPressed(KeyEvent e) {
-                MovementSystem.Direction direction;
-                //Move main piece up
-                if ((e.getKeyCode() == KeyEvent.VK_UP)|| (e.getKeyCode() == KeyEvent.VK_W) ){
-                    direction = MovementSystem.Direction.up;
-                    mControlSystem.update(direction, mEntities);
+                
+                if ((e.getKeyCode() == KeyEvent.VK_UP) || (e.getKeyCode() == KeyEvent.VK_W) ){
+                    mKeysCurrentlyPressed[UP] = true;
+                    mControlSystem.update(mKeysCurrentlyPressed, mEntities);
                 }
                 //Move main piece left
                 if ((e.getKeyCode() == KeyEvent.VK_LEFT) || (e.getKeyCode() == KeyEvent.VK_A)) {
-                    direction = MovementSystem.Direction.left;
-                    mControlSystem.update(direction, mEntities);
+                    mKeysCurrentlyPressed[LEFT] = true;
+                    mControlSystem.update(mKeysCurrentlyPressed, mEntities);
                 }
                 //Move main piece down
                 if ((e.getKeyCode() == KeyEvent.VK_DOWN) || (e.getKeyCode() == KeyEvent.VK_S)){
-                    direction = MovementSystem.Direction.down;
-                    mControlSystem.update(direction, mEntities);
+                    mKeysCurrentlyPressed[DOWN] = true;
+                    mControlSystem.update(mKeysCurrentlyPressed, mEntities);
                 }
                 //Move main piece right
                 if ((e.getKeyCode() == KeyEvent.VK_RIGHT) || (e.getKeyCode() == KeyEvent.VK_D)){
-                    direction = MovementSystem.Direction.right;
-                    mControlSystem.update(direction, mEntities);
+                    mKeysCurrentlyPressed[RIGHT] = true;
+                    mControlSystem.update(mKeysCurrentlyPressed, mEntities);
                 }
                 
         }});
@@ -79,27 +115,35 @@ public class Game extends JPanel {
     RenderSystem mRenderSystem;
     MovementSystem mMovementSystem;
     ControlSystem mControlSystem;
+    CollisionSystem mCollisionSystem;
+    Boolean[] mKeysCurrentlyPressed = new Boolean[]{false,false,false,false};
     int id = 0;
 
     public Game() {
         mMovementSystem = new MovementSystem();
         mRenderSystem = new RenderSystem();
         mControlSystem = new ControlSystem();
+        mCollisionSystem = new CollisionSystem();
         setupWindow();
         // Create a new vector of entities
         mEntities = new Vector<Entity>();
 
         Entity mainCircleEntity = new Entity();
-        mainCircleEntity.addComponent(new CircleComponent(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, 50));
+        mainCircleEntity.addComponent(new CircleComponent(0, 0, 50));
         mainCircleEntity.addComponent(new MovementComponent(0, 0));
         mainCircleEntity.addComponent(new ControllableComponent());
-        mEntities.add(mainCircleEntity);
+        mainCircleEntity.addComponent(new HungryComponent());
 
-        Entity secondCircleEntity = new Entity();
-        secondCircleEntity.addComponent(new CircleComponent(200, 200, 25));
-        secondCircleEntity.addComponent(new MovementComponent(0, 0));
-        mEntities.add(secondCircleEntity);
-    
+        mEntities.add(mainCircleEntity);
+        
+        int numOfFood = 100;
+        for (int i=0; i<numOfFood; i++){
+            Entity pieceOfFood = new Entity();
+            pieceOfFood.addComponent(new CircleComponent((int) (WINDOW_WIDTH * Math.random()), (int) (WINDOW_HEIGHT * Math.random()), 5));
+            pieceOfFood.addComponent(new MovementComponent(0, 0));
+            pieceOfFood.addComponent(new EdibleComponent());
+            mEntities.add(pieceOfFood);
+        }
         // Last Update
         double last = java.lang.System.nanoTime();
 
@@ -119,6 +163,7 @@ public class Game extends JPanel {
             last = now;
 
             mMovementSystem.update(mEntities);
+            mCollisionSystem.update(mEntities);
 
             repaint();
             // Toolkit.getDefaultToolkit().sync();

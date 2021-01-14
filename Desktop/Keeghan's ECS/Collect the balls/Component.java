@@ -6,13 +6,7 @@ import java.awt.event.KeyListener;
 public abstract class Component {
 
 }
-// Future components:
-// 	Moveable Component
-//  Controllable Component
-//  Renderable Component
-	// What how to render each object RenderAsCircleComponent or CircleComponent?
-// 
-// 
+
 
 // Circle Component
 class CircleComponent extends Component {
@@ -41,5 +35,13 @@ class MovementComponent extends Component {
 }
 
 class ControllableComponent extends Component {
-	ControllableComponent(){};
+	public ControllableComponent(){};
+}
+
+class EdibleComponent extends Component {
+	public EdibleComponent(){};
+}
+
+class HungryComponent extends Component {
+	public HungryComponent(){};
 }
