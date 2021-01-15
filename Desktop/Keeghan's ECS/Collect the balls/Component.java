@@ -1,47 +1,41 @@
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.*;
 
-// Abstract Component Base Class
 public abstract class Component {
-
 }
 
 
-// Circle Component
 class CircleComponent extends Component {
-	// Data Members
 	public int xPos, yPos, Radius;
-	
-	public CircleComponent(int xPos, int yPos, int Radius) {
+	public Color color;
+
+	public CircleComponent(int xPos, int yPos, int Radius, Color color) {
 		this.Radius = Radius;
 		this.xPos = xPos;
 		this.yPos = yPos;
+		this.color = color;
 	}
-
-	// Methods
 }
 
-// Movement Component
 class MovementComponent extends Component {
-	// Data Members
 	public int xVel, yVel;
 
 	public MovementComponent(int xVel, int yVel) {
 		this.xVel = xVel;
 		this.yVel = yVel;
 	}
-
 }
 
 class ControllableComponent extends Component {
-	public ControllableComponent(){};
 }
 
-class EdibleComponent extends Component {
-	public EdibleComponent(){};
+class WASDControllsComponent extends Component {
+}
+
+class ArrowControllsComponent extends Component {
+}
+
+class FoodComponent extends Component {
 }
 
 class HungryComponent extends Component {
-	public HungryComponent(){};
 }

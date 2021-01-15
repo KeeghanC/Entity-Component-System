@@ -1,44 +1,49 @@
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.Control;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.lang.System;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 import java.util.Vector;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent.*;
 import java.awt.event.KeyListener;
-import java.lang.*;
-import static java.lang.System.out;
 
 /*
  TODO:
-
-Add edible component
-Check for collisions
-Allow for balls to increase in size when they collide
-
-
-
-
-
+Fix movement 
+Slow down big bubbles 
+Add artificial bots
 */
 
 
 public class Game extends JPanel {
     public static int WINDOW_WIDTH = 1920;
     public static int WINDOW_HEIGHT = 1080;
+
     public static int UP = 0;
     public static int DOWN = 1;
     public static int LEFT = 2;
     public static int RIGHT = 3;
-        // Function to create the window and display it
+
+    public static int NUM_OF_FOOD = 100;
+
+    // Player One Controlls
+    int PlayerOneUp = KeyEvent.VK_UP;
+    int PlayerOneDown = KeyEvent.VK_DOWN;
+    int PlayerOneLeft = KeyEvent.VK_LEFT;
+    int PlayerOneRight = KeyEvent.VK_RIGHT;
+
+    // Player Two Controls
+    int PlayerTwoUp = KeyEvent.VK_W;
+    int PlayerTwoDown = KeyEvent.VK_S;
+    int PlayerTwoLeft = KeyEvent.VK_A;
+    int PlayerTwoRight = KeyEvent.VK_D;
+
+    Vector<Entity> mEntities = new Vector<Entity>();
+    RenderSystem mRenderSystem;
+    MovementSystem mMovementSystem;
+    ControlSystem mControlSystem;
+    CollisionSystem mCollisionSystem;
+    Boolean[] mPlayer1KeysCurrentlyPressed = new Boolean[]{false,false,false,false};
+    Boolean[] mPlayer2KeysCurrentlyPressed = new Boolean[]{false,false,false,false};
+    
+    // Function to create the window and display it
     public void setupWindow() {
         JFrame frame = new JFrame();
         frame.setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -50,25 +55,45 @@ public class Game extends JPanel {
         frame.addKeyListener(new KeyListener(){
             @Override
             public void keyReleased(KeyEvent e){
-                if ((e.getKeyCode() == KeyEvent.VK_UP) || (e.getKeyCode() == KeyEvent.VK_W) ){
-                    mKeysCurrentlyPressed[UP] = false;
-                    mControlSystem.update(mKeysCurrentlyPressed, mEntities);
+                Boolean WASDmovementKeyReleased = false;
+                Boolean ArrowsKeysReleased = false;
+                if (e.getKeyCode() == PlayerOneUp){
+                    mPlayer1KeysCurrentlyPressed[UP] = false;
+                    ArrowsKeysReleased = true;
                 }
                 //Move main piece left
-                if ((e.getKeyCode() == KeyEvent.VK_LEFT) || (e.getKeyCode() == KeyEvent.VK_A)) {
-                    mKeysCurrentlyPressed[LEFT] = false;
-                    mControlSystem.update(mKeysCurrentlyPressed, mEntities);
+                if (e.getKeyCode() == PlayerOneLeft) { //} || (e.getKeyCode() == KeyEvent.VK_A)) {
+                    mPlayer1KeysCurrentlyPressed[LEFT] = false;
+                    ArrowsKeysReleased = true;
                 }
                 //Move main piece down
-                if ((e.getKeyCode() == KeyEvent.VK_DOWN) || (e.getKeyCode() == KeyEvent.VK_S)){
-                    mKeysCurrentlyPressed[DOWN] = false;
-                    mControlSystem.update(mKeysCurrentlyPressed, mEntities);
+                if (e.getKeyCode() == PlayerOneDown) {//|| (e.getKeyCode() == KeyEvent.VK_S)){
+                    mPlayer1KeysCurrentlyPressed[DOWN] = false;
+                    ArrowsKeysReleased = true;
                 }
                 //Move main piece right
-                if ((e.getKeyCode() == KeyEvent.VK_RIGHT) || (e.getKeyCode() == KeyEvent.VK_D)){
-                    mKeysCurrentlyPressed[RIGHT] = false;
-                    mControlSystem.update(mKeysCurrentlyPressed, mEntities);
+                if (e.getKeyCode() == PlayerOneRight) {//} || (e.getKeyCode() == KeyEvent.VK_D)){
+                    mPlayer1KeysCurrentlyPressed[RIGHT] = false;
+                    ArrowsKeysReleased = true;
                 }
+                if (ArrowsKeysReleased) mControlSystem.update(mPlayer1KeysCurrentlyPressed, mEntities, ArrowControllsComponent.class);
+                if (e.getKeyCode() == PlayerTwoUp){
+                    mPlayer2KeysCurrentlyPressed[UP] = false;
+                    WASDmovementKeyReleased = true;
+                }
+                if (e.getKeyCode() == PlayerTwoDown){
+                    mPlayer2KeysCurrentlyPressed[DOWN] = false;
+                    WASDmovementKeyReleased = true;
+                }
+                if (e.getKeyCode() == PlayerTwoLeft){
+                    mPlayer2KeysCurrentlyPressed[LEFT] = false;
+                    WASDmovementKeyReleased = true;
+                }
+                if (e.getKeyCode() == PlayerTwoRight){
+                    mPlayer2KeysCurrentlyPressed[RIGHT] = false;
+                    WASDmovementKeyReleased = true;
+                }
+                if (WASDmovementKeyReleased) mControlSystem.update(mPlayer2KeysCurrentlyPressed, mEntities, WASDControllsComponent.class);
             }
             @Override
             public void keyTyped(KeyEvent e){
@@ -76,26 +101,45 @@ public class Game extends JPanel {
             }
             @Override
             public void keyPressed(KeyEvent e) {
-                
-                if ((e.getKeyCode() == KeyEvent.VK_UP) || (e.getKeyCode() == KeyEvent.VK_W) ){
-                    mKeysCurrentlyPressed[UP] = true;
-                    mControlSystem.update(mKeysCurrentlyPressed, mEntities);
+                Boolean WASDPressed = false;
+                Boolean ArrowsPressed = false;
+                if (e.getKeyCode() == PlayerOneUp){
+                    mPlayer1KeysCurrentlyPressed[UP] = true;
+                    ArrowsPressed = true;
                 }
                 //Move main piece left
-                if ((e.getKeyCode() == KeyEvent.VK_LEFT) || (e.getKeyCode() == KeyEvent.VK_A)) {
-                    mKeysCurrentlyPressed[LEFT] = true;
-                    mControlSystem.update(mKeysCurrentlyPressed, mEntities);
+                if (e.getKeyCode() == PlayerOneLeft) { //} || (e.getKeyCode() == KeyEvent.VK_A)) {
+                    mPlayer1KeysCurrentlyPressed[LEFT] = true;
+                    ArrowsPressed = true;
                 }
                 //Move main piece down
-                if ((e.getKeyCode() == KeyEvent.VK_DOWN) || (e.getKeyCode() == KeyEvent.VK_S)){
-                    mKeysCurrentlyPressed[DOWN] = true;
-                    mControlSystem.update(mKeysCurrentlyPressed, mEntities);
+                if (e.getKeyCode() == PlayerOneDown) {//|| (e.getKeyCode() == KeyEvent.VK_S)){
+                    mPlayer1KeysCurrentlyPressed[DOWN] = true;
+                    ArrowsPressed = true;
                 }
                 //Move main piece right
-                if ((e.getKeyCode() == KeyEvent.VK_RIGHT) || (e.getKeyCode() == KeyEvent.VK_D)){
-                    mKeysCurrentlyPressed[RIGHT] = true;
-                    mControlSystem.update(mKeysCurrentlyPressed, mEntities);
+                if (e.getKeyCode() == PlayerOneRight) {//} || (e.getKeyCode() == KeyEvent.VK_D)){
+                    mPlayer1KeysCurrentlyPressed[RIGHT] = true;
+                    ArrowsPressed = true;
                 }
+                if (ArrowsPressed) mControlSystem.update(mPlayer1KeysCurrentlyPressed, mEntities, ArrowControllsComponent.class);
+                if (e.getKeyCode() == PlayerTwoUp){
+                    mPlayer2KeysCurrentlyPressed[UP] = true;
+                    WASDPressed = true;
+                }
+                if (e.getKeyCode() == PlayerTwoDown){
+                    mPlayer2KeysCurrentlyPressed[DOWN] = true;
+                    WASDPressed = true;
+                }
+                if (e.getKeyCode() == PlayerTwoLeft){
+                    mPlayer2KeysCurrentlyPressed[LEFT] = true;
+                    WASDPressed = true;
+                }
+                if (e.getKeyCode() == PlayerTwoRight){
+                    mPlayer2KeysCurrentlyPressed[RIGHT] = true;
+                    WASDPressed = true;
+                }
+                if (WASDPressed) mControlSystem.update(mPlayer2KeysCurrentlyPressed, mEntities, WASDControllsComponent.class);
                 
         }});
         setDoubleBuffered(true);
@@ -108,42 +152,49 @@ public class Game extends JPanel {
 
     // Main function that takes care of some Object Oriented stuff
     public static void main(String args[]) {
-        Game game = new Game();
+        new Game();
     }
-
-    Vector<Entity> mEntities = new Vector<Entity>();
-    RenderSystem mRenderSystem;
-    MovementSystem mMovementSystem;
-    ControlSystem mControlSystem;
-    CollisionSystem mCollisionSystem;
-    Boolean[] mKeysCurrentlyPressed = new Boolean[]{false,false,false,false};
-    int id = 0;
 
     public Game() {
         mMovementSystem = new MovementSystem();
         mRenderSystem = new RenderSystem();
         mControlSystem = new ControlSystem();
         mCollisionSystem = new CollisionSystem();
-        setupWindow();
-        // Create a new vector of entities
+        
         mEntities = new Vector<Entity>();
 
-        Entity mainCircleEntity = new Entity();
-        mainCircleEntity.addComponent(new CircleComponent(0, 0, 50));
-        mainCircleEntity.addComponent(new MovementComponent(0, 0));
-        mainCircleEntity.addComponent(new ControllableComponent());
-        mainCircleEntity.addComponent(new HungryComponent());
+        setupWindow();
 
-        mEntities.add(mainCircleEntity);
+
+        Entity Player1Blob = new Entity();
+        Player1Blob.addComponent(new CircleComponent(100, 100, 50, Color.GREEN));
+        Player1Blob.addComponent(new MovementComponent(0, 0));
+        Player1Blob.addComponent(new ControllableComponent());
+        Player1Blob.addComponent(new HungryComponent());
+        Player1Blob.addComponent(new ArrowControllsComponent());
+        mEntities.add(Player1Blob);
         
-        int numOfFood = 100;
-        for (int i=0; i<numOfFood; i++){
+        Entity Player2Blob = new Entity();
+        Player2Blob.addComponent(new CircleComponent(WINDOW_WIDTH-100, WINDOW_HEIGHT - 100, 50, Color.RED));
+        Player2Blob.addComponent(new MovementComponent(0, 0));
+        Player2Blob.addComponent(new ControllableComponent());
+        Player2Blob.addComponent(new HungryComponent());
+        Player2Blob.addComponent(new WASDControllsComponent());
+        mEntities.add(Player2Blob);
+        
+        for (int i=0; i<NUM_OF_FOOD; i++){
             Entity pieceOfFood = new Entity();
-            pieceOfFood.addComponent(new CircleComponent((int) (WINDOW_WIDTH * Math.random()), (int) (WINDOW_HEIGHT * Math.random()), 5));
-            pieceOfFood.addComponent(new MovementComponent(0, 0));
-            pieceOfFood.addComponent(new EdibleComponent());
+
+            int randomX = (int) (WINDOW_WIDTH * Math.random());
+            int randomY = (int) (WINDOW_HEIGHT * Math.random());
+            int radius = 5;
+            Color color = Color.CYAN;
+
+            pieceOfFood.addComponent(new CircleComponent(randomX, randomY, radius, color));
+            pieceOfFood.addComponent(new FoodComponent());
             mEntities.add(pieceOfFood);
         }
+
         // Last Update
         double last = java.lang.System.nanoTime();
 
@@ -158,7 +209,8 @@ public class Game extends JPanel {
             
             now = java.lang.System.nanoTime();
 
-            double dt = (now - last) / 1000000000.0;
+            // double dt = (now - last) / 1000000000.0;
+            
             // System.out.println(dt);
             last = now;
 
@@ -177,10 +229,4 @@ public class Game extends JPanel {
         Toolkit.getDefaultToolkit().sync();
         mRenderSystem.render((Graphics2D)g, mEntities);
     }
-    // @Override
-    // public void paintComponent(Graphics g) {
-    //     super.paintComponent(g);
-    //     mRenderSystem.render((Graphics2D)g, mEntities);
-    // }
-
 }
