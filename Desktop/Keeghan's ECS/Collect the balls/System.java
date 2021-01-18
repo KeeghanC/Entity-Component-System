@@ -1,6 +1,8 @@
 import java.awt.*;
 import java.util.Vector;
 
+import javax.swing.text.AttributeSet.ColorAttribute;
+
 public abstract class System {
 
 }
@@ -8,7 +10,23 @@ public abstract class System {
 class RenderSystem extends System {
 	public void render(Graphics2D g, Vector<Entity> entities) {
 		g.clearRect(0, 0, 1920, 1080);
+		if (Game.gameIsFinished){
+			for(int i=0; i<entities.size(); i++) {
+				Entity entity = entities.elementAt(i);
+				if(entity.hasComponent(HungryComponent.class)) {
+					CircleComponent circle = (CircleComponent)entity.getComponent(CircleComponent.class);
+					g.setColor(circle.color);
+					g.fillOval(circle.xPos - circle.Radius, circle.yPos - circle.Radius, circle.Radius*2, circle.Radius*2);
+					g.setColor(Color.BLACK);
+					if (entity.hasComponent(HungryComponent.class)) g.drawString(String.valueOf(circle.Radius), circle.xPos-5, circle.yPos+5);
+				}
+			}
 
+			// g.scale(4, 4);
+			g.setColor(Color.BLACK);
+			g.drawString(String.format("Game over. Winner: %s circle", Game.winnerString), Game.WINDOW_WIDTH/2, Game.WINDOW_HEIGHT/2);
+			return;
+		}
 		for(int i=0; i<entities.size(); i++) {
 			Entity entity = entities.elementAt(i);
 			if(entity.hasComponent(CircleComponent.class)) {
@@ -23,10 +41,10 @@ class RenderSystem extends System {
 }
 
 class MovementSystem extends System {
-	public static int SPEED = 15;
+	public static int SPEED = 25 * 10;
 	public static int SLOWING_FACTOR = SPEED;
 
-	public void update (Vector<Entity> mEntities){
+	public void update (Vector<Entity> mEntities, double dt){
 		for(Entity entity : mEntities) {
 			if (entity.hasComponent(MovementComponent.class)){
 				if (entity.hasComponent(CircleComponent.class)){
@@ -34,23 +52,23 @@ class MovementSystem extends System {
 					MovementComponent movementComponent = (MovementComponent)entity.getComponent(MovementComponent.class);
 					
 					//Move the object
-					circle.xPos += movementComponent.xVel;
-					circle.yPos += movementComponent.yVel;
+					circle.xPos = circle.xPos + (int)(movementComponent.xVel * dt);
+					circle.yPos = circle.yPos + (int)(movementComponent.yVel * dt);
 					
 					//Slow the object down if it's currently moving
 					// Slow X
-					if (movementComponent.xVel > 0){ 
-						movementComponent.xVel -= SLOWING_FACTOR;
-					} else if (movementComponent.xVel < 0) {
-						movementComponent.xVel += SLOWING_FACTOR;
-					}
+					// if (movementComponent.xVel > 0){ 
+					// 	movementComponent.xVel -= SLOWING_FACTOR;
+					// } else if (movementComponent.xVel < 0) {
+					// 	movementComponent.xVel += SLOWING_FACTOR;
+					// }
 
 					// Slow Y
-					if (movementComponent.yVel > 0){ 
-						movementComponent.yVel -= SLOWING_FACTOR;
-					} else if (movementComponent.yVel < 0) {
-						movementComponent.yVel += SLOWING_FACTOR;
-					}
+					// if (movementComponent.yVel > 0){ 
+					// 	movementComponent.yVel -= SLOWING_FACTOR;
+					// } else if (movementComponent.yVel < 0) {
+					// 	movementComponent.yVel += SLOWING_FACTOR;
+					// }
 				}
 			}
 		}
@@ -67,6 +85,8 @@ class ControlSystem extends System {
 						if (entity.hasComponent(playerToMove)){
 							MovementComponent movementComponent = (MovementComponent) entity.getComponent(MovementComponent.class);
 							CircleComponent circleComponent = (CircleComponent) entity.getComponent(CircleComponent.class);
+							movementComponent.yVel = 0;
+							movementComponent.xVel = 0;
 							if (mKeysPressed[Game.UP] == true){
 								if (circleComponent.yPos <= 0) continue;
 								movementComponent.yVel -= MovementSystem.SPEED;
@@ -96,8 +116,6 @@ class ControlSystem extends System {
 class CollisionSystem extends System {
 	public float GROWING_FACTOR = 0.25f;
 
-
-	public void print(String a) { java.lang.System.out.println(a);}
 	public void update(Vector<Entity> mEntities){
 		for (Entity potentialHungryCircle : mEntities){
 			for (Entity potentialFood : mEntities){
@@ -114,7 +132,7 @@ class CollisionSystem extends System {
 							FoodCircle.xPos =  randomX;
 							FoodCircle.yPos = randomY;
 						} else mEntities.remove(potentialFood);
-						return ;
+						return;
 					}
 				}
 				if (potentialHungryCircle.hasComponent(HungryComponent.class)) {
@@ -125,13 +143,19 @@ class CollisionSystem extends System {
 								CircleComponent entityCircle = (CircleComponent)potentialHungryCircle.getComponent(CircleComponent.class);
 								CircleComponent entity2Circle = (CircleComponent)potentialFood.getComponent(CircleComponent.class);
 								if (entityCircle.Radius > entity2Circle.Radius) {
-									entityCircle.Radius += (int) (Math.ceil(entity2Circle.Radius));
-									mEntities.remove(potentialFood);
+									// entityCircle.Radius += (int) (Math.ceil(entity2Circle.Radius));
+									Game.gameIsFinished = true;
+									if (entityCircle.color == Color.RED) Game.winnerString = "Red";
+									else Game.winnerString = "Green";
+									// mEntities.remove(potentialFood);
 									return;
 								}
-								if (entityCircle.Radius <= entity2Circle.Radius) {
-									entity2Circle.Radius += (int) (Math.ceil(entityCircle.Radius));
-									mEntities.remove(potentialHungryCircle);
+								if (entityCircle.Radius < entity2Circle.Radius) {
+									// entity2Circle.Radius += (int) (Math.ceil(entityCircle.Radius));
+									// mEntities.remove(potentialHungryCircle);
+									Game.gameIsFinished = true;
+									if (entity2Circle.color == Color.RED) Game.winnerString = "Red";
+									else Game.winnerString = "Green";
 									return;
 								}
 								// if (entityCircle.Radius == entity2Circle.Radius) java.lang.System.out.println("Collision occurred but objects are of the same size");
@@ -142,6 +166,7 @@ class CollisionSystem extends System {
 				}
 			}
 		}
+		return;
 	}
 
 	private boolean collisionCheck(Entity entity, Entity entity2) {
@@ -161,3 +186,4 @@ class CollisionSystem extends System {
 		return collided;
 	}
 }
+

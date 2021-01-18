@@ -16,12 +16,16 @@ public class Game extends JPanel {
     public static int WINDOW_WIDTH = 1920;
     public static int WINDOW_HEIGHT = 1080;
 
+    public static boolean gameIsFinished = false;
+    public static String winnerString = "";
     public static int UP = 0;
     public static int DOWN = 1;
     public static int LEFT = 2;
     public static int RIGHT = 3;
 
     public static int NUM_OF_FOOD = 100;
+
+    // public static int WINNING_SCORE = 400;
 
     // Player One Controlls
     int PlayerOneUp = KeyEvent.VK_UP;
@@ -160,7 +164,6 @@ public class Game extends JPanel {
         mRenderSystem = new RenderSystem();
         mControlSystem = new ControlSystem();
         mCollisionSystem = new CollisionSystem();
-        
         mEntities = new Vector<Entity>();
 
         setupWindow();
@@ -198,7 +201,7 @@ public class Game extends JPanel {
         // Last Update
         double last = java.lang.System.nanoTime();
 
-        while(true) {
+        while(!gameIsFinished) {
             double now = java.lang.System.nanoTime();
             
             try {
@@ -209,17 +212,20 @@ public class Game extends JPanel {
             
             now = java.lang.System.nanoTime();
 
-            // double dt = (now - last) / 1000000000.0;
+            double dt = (now - last) / 1000000000.0;
             
-            // System.out.println(dt);
+            // java.lang.System.out.println(dt);
             last = now;
 
-            mMovementSystem.update(mEntities);
+            mMovementSystem.update(mEntities, dt);
+            
             mCollisionSystem.update(mEntities);
+           
 
             repaint();
             // Toolkit.getDefaultToolkit().sync();
         }
+        repaint();
     }
 
     
